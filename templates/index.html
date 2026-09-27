@@ -17,103 +17,89 @@
         <section class="result"></section>
 
         <section class="history">
+            <h2 class="history-title">История запросов</h2>
             <div class="history-content"></div>
         </section>
     </main>
 
     <script>
-        async function fetchWeather() {
-    const cityInput = document.getElementById('city');
-    const resultDiv = document.getElementById('result');
-    const city = cityInput.value.trim();
+        const cityInput = document.getElementById('city');
+        const resultDiv = document.querySelector('.result');
+        const getWeatherBtn = document.getElementById('getWeather');
 
-    if (!city) {
-      showError('Введите название города.');
-      return;
-    }
+        function fetchWeather() {
+            const city = cityInput.value.trim();
 
-    resultDiv.innerHTML = 'Загрузка...';
+            if (!city) {
+                showError('Введите название города.');
+                return;
+            }
 
-    try {
-      const response = await fetch(`/weather?city=\${encodeURIComponent(city)}`);
-      const data = await response.json();
+            resultDiv.innerHTML = '<p class="loading">Загрузка...</p>';
 
-      if (data.error) {
-        // Показываем понятную ошибку от бэкенда
-        showError(data.error);
-      } else {
-        // Отображаем погоду
-        resultDiv.innerHTML = `
-          <h3>\${data.city}</h3>
-          <p>Температура: \${data.temp} °C</p>
-          <p>Описание: \${data.description}</p>
-          <p>Влажность: \${data.humidity}%</p>
-          <p>Скорость ветра: \${data.wind_speed} м/с</p>
-        `;
-      }
-    } catch (err) {
-      showError('Произошла ошибка соединения. Попробуйте позже.');
-    }
-  }
-
-  function showError(message) {
-    document.getElementById('result').innerHTML = `
-      <div style="color: red; padding: 10px; border: 1px solid red; border-radius: 4px;">
-        ⚠️ \${message}
-      </div>
-    `;
-  }
-        function loadHistory() {
-            fetch("/history?limit=10")
-                .then(r => r.json())
-                .then(data => {
-                    if (data.length === 0) {
-                        document.querySelector(".history-content").innerHTML = "<p class='empty'>История пуста</p>";
+            fetch('/weather?city=' + encodeURIComponent(city))
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.error) {
+                        showError(data.error);
                         return;
                     }
-                    let html = "";
-                    data.forEach(row => {
-                        html += `
-                            <div class="history-item">
-                                <div class="history-city">${row.city}</div>
-                                <div class="history-temp">${row.temp}°C</div>
-                                <div class="history-desc">${row.description}</div>
-                                <div class="history-date">${row.fetched_at}</div>
-                            </div>
-                        `;
-                    });
-                    document.querySelector(".history-content").innerHTML = html;
+                    renderWeatherCard(data);
+                    loadHistory();
+                })
+                .catch(function() {
+                    showError('Произошла ошибка соединения. Попробуйте позже.');
                 });
         }
 
-        document.getElementById("getWeather").addEventListener("click", () => {
-            const city = document.getElementById("city").value;
-            fetch("/weather?city=" + city)
-                .then(r => r.json())
-                .then(data => {
-                    if (data.error) {
-                        document.querySelector(".result").innerHTML = `<p>${data.error}</p>`;
+        function renderWeatherCard(data) {
+            let html = '<div class="weather-card">';
+            html += '<h2>' + data.city + '</h2>';
+            html += '<div class="weather-temp">' + data.temp + '<span>°C</span></div>';
+            html += '<div class="weather-desc">' + data.description + '</div>';
+            html += '<div class="weather-details">';
+            html += '<div class="detail"><span class="detail-label">Влажность</span><span class="detail-value">' + data.humidity + '%</span></div>';
+            html += '<div class="detail"><span class="detail-label">Давление</span><span class="detail-value">' + data.pressure + ' гПа</span></div>';
+            html += '<div class="detail"><span class="detail-label">Ветер</span><span class="detail-value">' + data.wind_speed + ' м/с</span></div>';
+            html += '<div class="detail"><span class="detail-label">Состояние</span><span class="detail-value">' + data.condition + '</span></div>';
+            html += '</div></div>';
+            resultDiv.innerHTML = html;
+        }
+
+        function showError(message) {
+            resultDiv.innerHTML = '<div class="error-box">' + message + '</div>';
+        }
+
+        function loadHistory() {
+            fetch('/history?limit=10')
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    const container = document.querySelector('.history-content');
+
+                    if (data.length === 0) {
+                        container.innerHTML = '<p class="empty">История пуста</p>';
                         return;
                     }
-                    document.querySelector(".result").innerHTML = `
-                    <div class="weather-card">
-                        <h2>${data.city}</h2>
-                        <div class="weather-temp">${data.temp}<span>°C</span></div>
-                        <div class="weather-desc">${data.description}</div>
-                        <div class="weather-details">
-                            <div class="detail">
-                                <span class="detail-label">Влажность</span>
-                                <span class="detail-value">${data.humidity}%</span>
-                            </div>
-                            <div class="detail">
-                                <span class="detail-label">Давление</span>
-                                <span class="detail-value">${data.pressure}</span>
-                            </div>
-                        </div>
-                    </div>
-                    `;
-                    loadHistory();
+
+                    let html = '';
+                    for (let i = 0; i < data.length; i++) {
+                        const row = data[i];
+                        html += '<div class="history-item">';
+                        html += '<div class="history-city">' + row.city + '</div>';
+                        html += '<div class="history-temp">' + row.temp + '°C</div>';
+                        html += '<div class="history-desc">' + row.description + '</div>';
+                        html += '<div class="history-extra">' + row.wind_speed + ' м/с · ' + row.condition + '</div>';
+                        html += '<div class="history-date">' + row.fetched_at + '</div>';
+                        html += '</div>';
+                    }
+                    container.innerHTML = html;
                 });
+        }
+
+        getWeatherBtn.addEventListener('click', fetchWeather);
+
+        cityInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') fetchWeather();
         });
 
         loadHistory();
