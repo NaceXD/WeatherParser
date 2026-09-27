@@ -5,7 +5,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from api import get_weather
-from db import save_weather, get_history
+from db import save_weather, get_history, init_db
+
+init_db()
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")

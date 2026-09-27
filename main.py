@@ -1,10 +1,11 @@
 import argparse
 
 from api import get_weather
-from db import save_weather, get_history
+from db import save_weather, get_history, init_db
 
 
 def main():
+    init_db()
     parser = argparse.ArgumentParser()
     parser.add_argument("--city", type=str, default="Krasnodar")
     parser.add_argument("--history", type=int, default=None)

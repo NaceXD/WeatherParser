@@ -61,6 +61,3 @@ def get_history(limit: int) -> list[dict]:
     ).fetchall()
     conn.close()
     return [dict(row) for row in result]
-
-
-init_db()
