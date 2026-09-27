@@ -72,17 +72,18 @@ def get_weather(city: str) -> dict:
             return {"error": "Не удалось получить описание погоды."}
 
         first_weather = weather_list[0]
-
         description = first_weather.get("description", "Нет данных")
         main_condition = first_weather.get("main", "Unknown")
 
+        main_data = data.get("main", {})
+        wind_data = data.get("wind", {})
         return {
-            "city": data["name"],
-            "temp": data["main"]["temp"],
+            "city": data.get("name", clean_city),
+            "temp": main_data.get("temp"),
             "description": description,
-            "humidity": data["main"]["humidity"],
-            "pressure": data["main"]["pressure"],
-            "wind_speed": data["wind"]["speed"],
+            "humidity": main_data.get("humidity"),
+            "pressure": main_data.get("pressure"),
+            "wind_speed": wind_data.get("speed"),
             "condition": main_condition
         }
 
