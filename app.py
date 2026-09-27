@@ -11,6 +11,8 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+HOST = os.getenv("APP_HOST", "127.0.0.1")
+PORT = int(os.getenv("APP_PORT", "8000"))
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
@@ -33,5 +35,4 @@ async def history(limit: int = 10):
 
 if __name__ == "__main__":
     import uvicorn
-    # Запускаем без reload=True внутри скрипта, используем команду uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host=HOST, port=PORT)
