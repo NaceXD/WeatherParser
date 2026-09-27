@@ -27,6 +27,12 @@
         const resultDiv = document.querySelector('.result');
         const getWeatherBtn = document.getElementById('getWeather');
 
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
         function fetchWeather() {
             const city = cityInput.value.trim();
 
@@ -54,21 +60,22 @@
 
         function renderWeatherCard(data) {
             let html = '<div class="weather-card">';
-            html += '<h2>' + data.city + '</h2>';
-            html += '<div class="weather-temp">' + data.temp + '<span>°C</span></div>';
-            html += '<div class="weather-desc">' + data.description + '</div>';
+            html += '<h2>' + escapeHtml(data.city) + '</h2>';
+            html += '<div class="weather-temp">' + escapeHtml(String(data.temp)) + '<span>°C</span></div>';
+            html += '<div class="weather-desc">' + escapeHtml(data.description) + '</div>';
             html += '<div class="weather-details">';
-            html += '<div class="detail"><span class="detail-label">Влажность</span><span class="detail-value">' + data.humidity + '%</span></div>';
-            html += '<div class="detail"><span class="detail-label">Давление</span><span class="detail-value">' + data.pressure + ' гПа</span></div>';
-            html += '<div class="detail"><span class="detail-label">Ветер</span><span class="detail-value">' + data.wind_speed + ' м/с</span></div>';
-            html += '<div class="detail"><span class="detail-label">Состояние</span><span class="detail-value">' + data.condition + '</span></div>';
+            html += '<div class="detail"><span class="detail-label">Влажность</span><span class="detail-value">' + escapeHtml(String(data.humidity)) + '%</span></div>';
+            html += '<div class="detail"><span class="detail-label">Давление</span><span class="detail-value">' + escapeHtml(String(data.pressure)) + ' гПа</span></div>';
+            html += '<div class="detail"><span class="detail-label">Ветер</span><span class="detail-value">' + escapeHtml(String(data.wind_speed)) + ' м/с</span></div>';
+            html += '<div class="detail"><span class="detail-label">Состояние</span><span class="detail-value">' + escapeHtml(data.condition) + '</span></div>';
             html += '</div></div>';
             resultDiv.innerHTML = html;
         }
 
         function showError(message) {
-            resultDiv.innerHTML = '<div class="error-box">' + message + '</div>';
+            resultDiv.innerHTML = '<div class="error-box">' + escapeHtml(message) + '</div>';
         }
+
 
         function loadHistory() {
             fetch('/history?limit=10')
@@ -85,16 +92,17 @@
                     for (let i = 0; i < data.length; i++) {
                         const row = data[i];
                         html += '<div class="history-item">';
-                        html += '<div class="history-city">' + row.city + '</div>';
-                        html += '<div class="history-temp">' + row.temp + '°C</div>';
-                        html += '<div class="history-desc">' + row.description + '</div>';
-                        html += '<div class="history-extra">' + row.wind_speed + ' м/с · ' + row.condition + '</div>';
-                        html += '<div class="history-date">' + row.fetched_at + '</div>';
+                        html += '<div class="history-city">' + escapeHtml(row.city) + '</div>';
+                        html += '<div class="history-temp">' + escapeHtml(String(row.temp)) + '°C</div>';
+                        html += '<div class="history-desc">' + escapeHtml(row.description) + '</div>';
+                        html += '<div class="history-extra">' + escapeHtml(String(row.wind_speed)) + ' м/с · ' + escapeHtml(row.condition) + '</div>';
+                        html += '<div class="history-date">' + escapeHtml(row.fetched_at) + '</div>';
                         html += '</div>';
                     }
                     container.innerHTML = html;
                 });
         }
+
 
         getWeatherBtn.addEventListener('click', fetchWeather);
 

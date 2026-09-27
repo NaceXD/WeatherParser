@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 from dotenv import load_dotenv
 import logging
@@ -20,7 +21,39 @@ if not API_KEY:
     )
 
 
+def sanitize_city(city: str) -> str | None:
+    """Очищаем и валидируем название города. Возращает None, если город не валиден"""
+    if not city:
+        return None
+    # Убираем пробелы по краям
+    city = city.strip()
+
+    # Пустая строка после обрезки
+    if not city:
+        return None
+    city = city.strip()
+    if not city:
+        return None
+
+    # Слишком длинное название
+    if len(city) > 100:
+        return None
+
+    # Только цифры
+    if city.isdigit():
+        return None
+    # Разрешаем буквы (любые алфавиты), пробелы, дефисы, апострофы и точки. Запрещаем спецсимволы
+    if not re.match(r"^[\w\s\-'.]+$", city, re.UNICODE):
+        return None
+    return city
+
+
 def get_weather(city: str) -> dict:
+    # Валидация входных данных
+    clean_city = sanitize_city(city)
+    if clean_city is None:
+        return {"error": "Некорректное название города. Используйте только буквы, пробелы и дефисы."}
+
     params = {
         "q": city,
         "appid": API_KEY,
