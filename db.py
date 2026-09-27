@@ -11,8 +11,8 @@ def init_db():
             temp REAL,
             humidity INTEGER,
             pressure INTEGER,
-            wind_speed INTEGER,
-            condition INTEGER,
+            wind_speed REAL,
+            condition TEXT,
             description TEXT,
             fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
