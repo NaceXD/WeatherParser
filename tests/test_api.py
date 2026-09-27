@@ -13,6 +13,9 @@ def test_weather_success():
     assert "temp" in data
     assert "description" in data
     assert "city" in data
+    assert "wind_speed" in data
+    assert "condition" in data
+    assert "pressure" in data
 
 
 def test_weather_unknown_city():
@@ -33,3 +36,5 @@ def test_history_endpoint():
     if len(data) > 0:
         assert "city" in data[0]
         assert "temp" in data[0]
+        assert "wind_speed" in data[0]
+        assert "condition" in data[0]

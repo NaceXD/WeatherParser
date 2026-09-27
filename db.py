@@ -11,11 +11,19 @@ def init_db():
             temp REAL,
             humidity INTEGER,
             pressure INTEGER,
+            wind_speed INTEGER,
+            condition INTEGER,
             description TEXT,
             fetched_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
     )
+    # Добавляем колонки, если таблица уже была создана без них
+    columns = {row[1] for row in cursor.execute("PRAGMA table_info(weather)").fetchall()}
+    if "wind_speed" not in columns:
+        cursor.execute("ALTER TABLE weather ADD COLUMN wind_speed REAL")
+    if "condition" not in columns:
+        cursor.execute("ALTER TABLE weather ADD COLUMN condition TEXT")
     conn.commit()
     conn.close()
 
@@ -24,9 +32,18 @@ def save_weather(record: dict):
     conn = sqlite3.connect("weather.db")
     cursor = conn.cursor()
     cursor.execute(
-        """INSERT INTO weather (city, temp, humidity, pressure, description) VALUES (?, ?, ?, ?, ?)
+        """INSERT INTO weather (city, temp, humidity, pressure, wind_speed, condition, description)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
-        (record["city"], record["temp"], record["humidity"], record["pressure"], record["description"]),
+        (
+            record["city"],
+            record["temp"],
+            record["humidity"],
+            record["pressure"],
+            record["wind_speed"],
+            record["condition"],
+            record["description"],
+        ),
     )
     conn.commit()
     conn.close()
@@ -44,5 +61,6 @@ def get_history(limit: int) -> list[dict]:
     ).fetchall()
     conn.close()
     return [dict(row) for row in result]
+
 
 init_db()
