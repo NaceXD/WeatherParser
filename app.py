@@ -5,13 +5,12 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from api import get_weather
-from db import init_db, save_weather, get_history
+from db import save_weather, get_history
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-init_db()
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):

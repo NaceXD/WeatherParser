@@ -1,12 +1,11 @@
 import argparse
 from dotenv import load_dotenv
 from api import get_weather
-from db import init_db, save_weather, get_history
+from db import save_weather, get_history
 
 
 def main():
     load_dotenv()
-    init_db()
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--city", type=str, default="Krasnodar")
