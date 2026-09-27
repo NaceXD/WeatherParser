@@ -1,9 +1,11 @@
-import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, AsyncMock, MagicMock
 from fastapi.testclient import TestClient
 from app import app
 
+import httpx2 as httpx
+
 client = TestClient(app)
+
 
 def mock_success_response():
     """Фиктивный успешный ответ от OWM"""
@@ -24,21 +26,23 @@ def mock_success_response():
     }
     return resp
 
+
 def mock_not_found_response():
     """Фиктивный ответ 404 — город не найден."""
     resp = MagicMock()
     resp.status_code = 404
-    resp.raise_for_status.side_effect = __import__(
-        "requests", fromlist=["HTTPError"]
-    ).exceptions.HTTPError(response=resp)
+    http_err = httpx.HTTPStatusError("Not Found", request=MagicMock(), response=resp)
+    resp.raise_for_status.side_effect = http_err
     resp.json.return_value = {"message": "Город не найден"}
     return resp
 
 
-@patch("api.requests.get")
-def test_weather_success(mock_get):
+@patch("api.httpx.AsyncClient")
+def test_weather_success(mock_client_cls):
     """Реальный город должен возвращать погоду (мок)."""
-    mock_get.return_value = mock_success_response()
+    mock_client = AsyncMock()
+    mock_client_cls.return_value.__aenter__.return_value = mock_client
+    mock_client.get = AsyncMock(return_value=mock_success_response())
 
     response = client.get("/weather", params={"city": "Moscow"})
     assert response.status_code == 200
@@ -52,10 +56,12 @@ def test_weather_success(mock_get):
     assert data["pressure"] == 1013
 
 
-@patch("api.requests.get")
-def test_weather_unknown_city(mock_get):
+@patch("api.httpx.AsyncClient")
+def test_weather_unknown_city(mock_client_cls):
     """Несуществующий город должен вернуть ошибку (мок)."""
-    mock_get.return_value = mock_not_found_response()
+    mock_client = AsyncMock()
+    mock_client_cls.return_value.__aenter__.return_value = mock_client
+    mock_client.get = AsyncMock(return_value=mock_not_found_response())
 
     response = client.get("/weather", params={"city": "Abcdefg123"})
     assert response.status_code == 200
@@ -64,15 +70,18 @@ def test_weather_unknown_city(mock_get):
     assert "не найден" in data["error"].lower()
 
 
-@patch("api.requests.get")
-def test_weather_invalid_input(mock_get):
+@patch("api.httpx.AsyncClient")
+def test_weather_invalid_input(mock_client_cls):
     """Невалидный город (спецсимволы) должен вернуть ошибку без запроса к API."""
+    mock_client = AsyncMock()
+    mock_client_cls.return_value.__aenter__.return_value = mock_client
+    mock_client.get = AsyncMock()
+
     response = client.get("/weather", params={"city": "<script>alert(1)</script>"})
     assert response.status_code == 200
     data = response.json()
     assert "error" in data
-    # requests.get не должен был вызваться
-    mock_get.assert_not_called()
+    mock_client.get.assert_not_called()
 
 
 def test_history_endpoint():

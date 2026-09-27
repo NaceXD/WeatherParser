@@ -22,7 +22,7 @@ async def index(request: Request):
 
 @app.get("/weather")
 async def weather(city: str = "Krasnodar"):
-    result = get_weather(city)
+    result = await get_weather(city)
 
     if "error" in result:
         return result

@@ -1,8 +1,31 @@
 import sqlite3
+from queue import Queue
+
+DB_NAME = "weather.db"
+_pool: Queue[sqlite3.Connection] = Queue(maxsize=5)
+
+
+def _create_connection() -> sqlite3.Connection:
+    conn = sqlite3.connect(DB_NAME, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def get_connection() -> sqlite3.Connection:
+    if _pool.empty():
+        return _create_connection()
+    return _pool.get_nowait()
+
+
+def release_connection(conn: sqlite3.Connection):
+    if _pool.full():
+        conn.close()
+    else:
+        _pool.put_nowait(conn)
 
 
 def init_db():
-    conn = sqlite3.connect("weather.db")
+    conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
         """CREATE TABLE IF NOT EXISTS weather (
@@ -18,18 +41,17 @@ def init_db():
         )
         """
     )
-    # Добавляем колонки, если таблица уже была создана без них
     columns = {row[1] for row in cursor.execute("PRAGMA table_info(weather)").fetchall()}
     if "wind_speed" not in columns:
         cursor.execute("ALTER TABLE weather ADD COLUMN wind_speed REAL")
     if "condition" not in columns:
         cursor.execute("ALTER TABLE weather ADD COLUMN condition TEXT")
     conn.commit()
-    conn.close()
+    release_connection(conn)
 
 
 def save_weather(record: dict):
-    conn = sqlite3.connect("weather.db")
+    conn = get_connection()
     cursor = conn.cursor()
     cursor.execute(
         """INSERT INTO weather (city, temp, humidity, pressure, wind_speed, condition, description)
@@ -46,18 +68,15 @@ def save_weather(record: dict):
         ),
     )
     conn.commit()
-    conn.close()
+    release_connection(conn)
 
 
 def get_history(limit: int) -> list[dict]:
-    conn = sqlite3.connect("weather.db")
-    conn.row_factory = sqlite3.Row
+    conn = get_connection()
     cursor = conn.cursor()
-
     result = cursor.execute(
-        """SELECT * FROM weather ORDER BY fetched_at DESC LIMIT ?
-        """,
+        """SELECT * FROM weather ORDER BY fetched_at DESC LIMIT ?""",
         (limit,)
     ).fetchall()
-    conn.close()
+    release_connection(conn)
     return [dict(row) for row in result]

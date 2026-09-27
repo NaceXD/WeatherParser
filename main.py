@@ -1,3 +1,4 @@
+import asyncio
 import argparse
 
 from api import get_weather
@@ -6,6 +7,7 @@ from db import save_weather, get_history, init_db
 
 def main():
     init_db()
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--city", type=str, default="Krasnodar")
     parser.add_argument("--history", type=int, default=None)
@@ -19,7 +21,7 @@ def main():
                 f"{i['description']} | Ветер: {i['wind_speed']} м/с | {i['condition']}"
             )
     else:
-        weather = get_weather(args.city)
+        weather = asyncio.run(get_weather(args.city))
         if "error" in weather:
             print(weather["error"])
             return
