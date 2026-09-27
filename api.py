@@ -59,7 +59,7 @@ def get_weather(city: str) -> dict:
     }
 
     try:
-        response = requests.get(BASE_URL, params=params, timeout=5)
+        response = requests.get(BASE_URL, params=params, timeout=10)
         response.raise_for_status()
         data = response.json()
 
