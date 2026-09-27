@@ -31,9 +31,6 @@ def sanitize_city(city: str) -> str | None:
     # Пустая строка после обрезки
     if not city:
         return None
-    city = city.strip()
-    if not city:
-        return None
 
     # Слишком длинное название
     if len(city) > 100:
