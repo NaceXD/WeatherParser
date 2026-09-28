@@ -54,14 +54,6 @@ def init_db():
             """
         )
 
-        # Создать колонки wind_speed и condition если их не было в уже созданной бд
-        columns = {row[1] for row in cursor.execute('PRAGMA table_info(weather)').fetchall()}
-        if "wind_speed" not in columns:
-            cursor.execute("ALTER TABLE weather ADD COLUMN wind_speed REAL")
-        if "condition" not in columns:
-            cursor.execute("ALTER TABLE weather ADD COLUMN condition TEXT")
-        conn.commit()
-
 def save_weather(record: dict):
     with get_db_connection() as conn:
         cursor = conn.cursor()
