@@ -93,15 +93,19 @@
                         const row = data[i];
                         html += '<div class="history-item">';
                         html += '<div class="history-city">' + escapeHtml(row.city) + '</div>';
+
+                        html += '<div class="history-date">' + escapeHtml(row.fetched_at) + '</div>';
+
                         html += '<div class="history-temp">' + escapeHtml(String(row.temp)) + '°C</div>';
+
                         html += '<div class="history-desc">' + escapeHtml(row.description) + '</div>';
                         html += '<div class="history-extra">' + escapeHtml(String(row.wind_speed)) + ' м/с · ' + escapeHtml(row.condition) + '</div>';
-                        html += '<div class="history-date">' + escapeHtml(row.fetched_at) + '</div>';
                         html += '</div>';
                     }
                     container.innerHTML = html;
                 });
         }
+
 
 
         getWeatherBtn.addEventListener('click', fetchWeather);
