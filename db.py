@@ -77,7 +77,7 @@ def get_history(limit: int) -> list[dict]:
     with get_db_connection() as conn:
         cursor = conn.cursor()
         result = cursor.execute(
-            """"SELECT * FROM weather ORDER BY fetched_at DESC LIMIT ?""",
+            """SELECT * FROM weather ORDER BY fetched_at DESC LIMIT ?""",
             (limit,)
         ).fetchall()
 
