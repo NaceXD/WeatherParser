@@ -35,23 +35,26 @@ def sanitize_city(city: str) -> str | None:
     return city
 
 
-async def get_weather(city: str) -> dict:
+async def get_weather(city: str, client: httpx.AsyncClient | None = None) -> dict:
     clean_city = sanitize_city(city)
     if clean_city is None:
         return {"error": "Некорректное название города. Используйте только буквы, пробелы и дефисы."}
 
     params = {
-        "q": city,
+        "q": clean_city,
         "appid": API_KEY,
         "units": "metric",
         "lang": "ru",
     }
-
+    # Если клиент не передан извне
+    should_close = False
+    if client is None:
+        client = httpx.AsyncClient()
+        should_close = True
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(BASE_URL, params=params, timeout=10)
-            response.raise_for_status()
-            data = response.json()
+        response = await client.get(BASE_URL, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json()
 
         weather_list = data.get("weather", [])
         if not weather_list:
@@ -85,8 +88,13 @@ async def get_weather(city: str) -> dict:
 
     except httpx.RequestError as e:
         logger.error(f"Сетевая ошибка: {e}")
-        return {"error": f"Не удалось получить данные: {e}"}
+        return {"error": f"Не удалось получить данные: проблема со связью."}
 
-    except KeyError as e:
+    except (KeyError, TypeError) as e:
         logger.error(f"Неожиданная структура данных от API: {e}")
         return {"error": "Сервис погоды вернул некорректные данные."}
+
+    finally:
+        # Закрываем сессию только если мы сами создали её локально внутри этой функции
+        if should_close:
+            await client.aclose()
